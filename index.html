@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小猫今天的心情</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #ffe6f0;
+      overflow: hidden;
+    }
+
+    /* ❄️ 雪花动画 */
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: white;
+      opacity: 0.9;
+      font-size: 12px;
+      pointer-events: none;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-10px); opacity: 1; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
+
+    /* 页面布局 */
+    .center-area {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      width: 300px;
+      text-align: center;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .question {
+      font-size: 18px;
+      font-weight: bold;
+      color: #d36c8c;
+      margin-bottom: 20px;
+    }
+
+    .option {
+      display: block;
+      background-color: #ffd1dc;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 30px;
+      padding: 10px;
+      margin: 10px 0;
+      cursor: pointer;
+      transition: transform 0.2s ease, background-color 0.3s ease;
+    }
+
+    .option:hover { transform: scale(1.05); background-color: #ff99ac; }
+    .option:active { transform: scale(0.95); }
+
+    .option.selected {
+      background-color: #ff7f9d;
+      animation: softPulse 0.4s ease;
+    }
+
+    @keyframes softPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    .confirm {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #ffb6c1;
+      border: none;
+      border-radius: 30px;
+      font-size: 16px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, background-color 0.3s ease;
+    }
+
+    .confirm:hover { transform: scale(1.05); background-color: #ff7f9d; }
+    .confirm:active { transform: scale(0.95); }
+
+    .password-input {
+      width: 80%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ffb6c1;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    /* 🐾 点击猫爪印 */
+    .paw {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0.7);
+      animation: pawFade 0.8s ease-out forwards;
+    }
+
+    @keyframes pawFade {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.6); }
+    }
+
+    /* 🎵 背景音乐按钮 */
+    #musicBtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      background-color: #ffb6c1;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+
+    #musicBtn:hover {
+      transform: scale(1.1);
+    }
+
+  </style>
+</head>
+<body>
+
+<button id="musicBtn">🎵</button>
+<audio id="bgm" loop>
+<source src="Alexis%20Ffrench%20-%20Heartbeats%20(Solo%20Piano%20Version).mp3">
+</audio>
+
+<div class="center-area">
+  <!-- 登录界面 -->
+  <div class="container" id="loginPage">
+    <div class="question">验证一下是不是小猫ど˶ˊ ᗜ ˋ˶う！</div>
+    <input type="password" id="password" maxlength="6" class="password-input" placeholder="******">
+    <button class="confirm" onclick="checkPassword()">进入</button>
+  </div>
+
+  <!-- 主界面 -->
+  <div class="container" id="mainPage" style="display:none;">
+    <div class="question">小猫今天 </div>
+
+    <button class="option" onclick="handleAnswer(this, 'A')">A. 开心嘛૮꒰ ˶• ༝ •˶꒱ა</button>
+    <button class="option" onclick="handleAnswer(this, 'B')">B. 有哪里不开心嘛 ૮₍ ˃ ⤙ ˂ ₎ა</button>
+
+    <button class="confirm" onclick="confirmChoice()">确认</button>
+  </div>
+</div>
+
+<script>
+  let selectedAnswer = '';
+  const options = document.querySelectorAll('.option');
+
+  /* 🎵 背景音乐控制 */
+  const bgm = document.getElementById("bgm");
+  const musicBtn = document.getElementById("musicBtn");
+  let musicPlaying = false;
+
+  musicBtn.onclick = () => {
+    if (!musicPlaying) {
+      bgm.play();
+      musicBtn.textContent = "🔊";
+      musicPlaying = true;
+    } else {
+      bgm.pause();
+      musicBtn.textContent = "🎵";
+      musicPlaying = false;
+    }
+  };
+
+  /* 密码检查 */
+  function checkPassword() {
+    const pwd = document.getElementById("password").value;
+
+    if (pwd === "803123") {
+      loginPage.style.display = "none";
+      mainPage.style.display = "block";
+    } else {
+      alert("小猫再好好想想  ᯠ _  ̫  _ᯄ");
+    }
+  }
+
+  function handleAnswer(button, answer) {
+    options.forEach(option => option.classList.remove('selected'));
+    button.classList.add('selected');
+    selectedAnswer = answer;
+  }
+
+  function confirmChoice() {
+    if (selectedAnswer === 'A') {
+      alert('好事多多降临到小猫身上~꒰ᐢ⸝⸝•༝•⸝⸝ᐢ꒱');
+    } else if (selectedAnswer === 'B') {
+      alert('我一直在❤');
+    } else {
+      alert('先选一个选项哦~🍬');
+    }
+  }
+
+  /* ❄️ 雪花生成 */
+  function createSnowflake() {
+    const snow = document.createElement("div");
+    snow.className = "snowflake";
+    snow.textContent = "❄";
+
+    snow.style.left = Math.random() * 100 + "vw";
+    snow.style.animationDuration = 3 + Math.random() * 3 + "s";
+    snow.style.fontSize = 8 + Math.random() * 10 + "px";
+
+    document.body.appendChild(snow);
+
+    setTimeout(() => snow.remove(), 7000);
+  }
+  setInterval(createSnowflake, 150);
+
+/* 🐾 触屏猫爪印 */
+function createPaw(x, y) {
+  const paw = document.createElement("img");
+
+  // 本地猫爪图片
+  paw.src = "a76d1cd7135443d7a36c6609ef0771870956ac5c1fe3-wDwoPP.png";
+
+  // 随机旋转 & 随机大小
+  const rotate = Math.random() * 360;
+  const scale = 0.6 + Math.random() * 0.6;
+  paw.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+
+  paw.className = "paw";
+  paw.style.left = x - 20 + "px";
+  paw.style.top = y - 20 + "px";
+
+  document.body.appendChild(paw);
+  setTimeout(() => paw.remove(), 800);
+}
+
+document.addEventListener("click", (e) => {
+  createPaw(e.clientX, e.clientY);
+});
+
+</script>
+
+</body>
+</html>
